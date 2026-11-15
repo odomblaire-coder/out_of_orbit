@@ -54,8 +54,32 @@ function setPortrait(t,aspect){t.encoding=THREE.sRGBEncoding;pMat.map=t;pMat.nee
   portrait.geometry.dispose();border.geometry.dispose();
   portrait.geometry=patchGeo(49.5,aw,ah);border.geometry=patchGeo(49.7,aw+.03,ah+.04)}
 new THREE.TextureLoader().load("portrait.webp",t=>setPortrait(t,t.image.width/t.image.height));
-document.getElementById('f').onchange=e=>{const f=e.target.files[0];if(!f)return;
-  new THREE.TextureLoader().load(URL.createObjectURL(f),t=>setPortrait(t,t.image.width/t.image.height))};
+// ---- visitors add their own photos beside the portrait (only they see them; nothing is uploaded anywhere)
+const slots=[.78,-.78,1.56,-1.56,2.34,-2.34,3.14]; // how far around the sphere each new photo goes, in radians
+const added=[];
+function feather(img){ // soften the photo's edges so it melts into the green wall
+  const s=Math.min(1,1100/Math.max(img.width,img.height)),w=Math.round(img.width*s),h=Math.round(img.height*s);
+  const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.drawImage(img,0,0,w,h);
+  const d=g.getImageData(0,0,w,h),f=Math.min(w,h)*.14;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const t=Math.min(1,Math.min(x,w-1-x,y,h-1-y)/f);
+    d.data[(y*w+x)*4+3]=t*t*(3-2*t)*255;
+  }
+  g.putImageData(d,0,0);return c;
+}
+function addPhoto(file){
+  if(added.length>=slots.length)return;
+  const url=URL.createObjectURL(file),img=new Image();
+  img.onload=()=>{
+    const c=feather(img),t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;
+    const aspect=c.width/c.height;let aw=.58,ah=aw/aspect;if(ah>1){ah=1;aw=ah*aspect}
+    const m=new THREE.Mesh(patchGeo(49.4,aw,ah),new THREE.MeshBasicMaterial({map:t,side:THREE.DoubleSide,transparent:true,depthWrite:false}));
+    m.rotation.y=slots[added.length];scene.add(m);added.push(m);URL.revokeObjectURL(url);
+  };
+  img.src=url;
+}
+document.getElementById('f').onchange=e=>{[...e.target.files].forEach(addPhoto);e.target.value=''};
+document.getElementById('clear').onclick=()=>{added.forEach(m=>{scene.remove(m);m.geometry.dispose();m.material.map.dispose();m.material.dispose()});added.length=0};
 
 // ---- look-around controls
 const dom=rend.domElement;let yaw=-2.6,pitch=0,vy=0,vp=0,drag=false,lx=0,ly=0,auto=true;
