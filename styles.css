@@ -1,0 +1,6 @@
+html,body{margin:0;height:100%;overflow:hidden;background:#5b7336;font-family:Georgia,serif}
+canvas{display:block;touch-action:none;cursor:grab}
+#ui{position:fixed;left:0;right:0;bottom:0;padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;align-items:center;gap:12px;color:#f4ecd8;font-size:14px;pointer-events:none}
+#ui span,#ui label{background:#1a171acc;padding:8px 14px;border-radius:20px}
+#ui label{pointer-events:auto;cursor:pointer}
+#ui input{display:none}
